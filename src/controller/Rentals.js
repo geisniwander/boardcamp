@@ -128,7 +128,7 @@ export async function postEndRentals(req, res) {
     if (!rentalEdited || rentalEdited.rowCount === 0)
       return res.sendStatus(404);
 
-    res.sendStatus(201);
+    res.sendStatus(200);
   } catch (error) {
     res.status(500).send(error.message);
   }

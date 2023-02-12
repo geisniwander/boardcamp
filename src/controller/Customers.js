@@ -21,7 +21,7 @@ export async function getCustomersById(req, res) {
 
     if (!customer || customer.rowCount === 0) return res.sendStatus(404);
 
-    res.status(200).send(customer.rows);
+    res.status(200).send(customer.rows[0]);
   } catch (error) {
     res.status(500).send(error.message);
   }
@@ -80,7 +80,7 @@ export async function putCustomers(req, res) {
     if (!customerEdited || customerEdited.rowCount === 0)
       return res.sendStatus(404);
 
-    res.sendStatus(201);
+    res.sendStatus(200);
   } catch (error) {
     res.status(500).send(error.message);
   }
