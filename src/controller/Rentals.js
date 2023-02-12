@@ -2,8 +2,11 @@ import dayjs from "dayjs";
 import { db } from "../config/database.js";
 
 export async function getRentals(req, res) {
+  const { customerId } = req.query;
+  const { gameId } = req.query;
+
   try {
-    const rentals = await db.query(`SELECT json_build_object(
+    const querySQL = `SELECT json_build_object(
       'id', rentals.id,
       'customerId', rentals."customerId",
       'gameId', rentals."gameId",
@@ -26,7 +29,18 @@ export async function getRentals(req, res) {
       ON rentals."customerId" = customers.id
     JOIN games
       ON rentals."gameId" = games.id
-    `);
+    `;
+    let rentals = [];
+    
+    if (customerId)
+      rentals = await db.query(`${querySQL} WHERE "customerId" = $1 `, [
+        customerId,
+      ]);
+    
+    else if (gameId)
+      rentals = await db.query(`${querySQL} WHERE "gameId" = $1 `, [gameId]);
+    
+    else rentals = await db.query(querySQL);
 
     const arrayRentals = rentals.rows.map((row) => row.json_build_object);
 
