@@ -15,13 +15,13 @@ export async function getCustomersById(req, res) {
   if (!id || isNaN(id) || id <= 0) return res.send(400);
 
   try {
-    const customers = await db.query(`SELECT * FROM customers WHERE id = $1`, [
+    const customer = await db.query(`SELECT * FROM customers WHERE id = $1`, [
       id,
     ]);
 
-    if (!customers || customers.rowCount === 0) return res.sendStatus(404);
+    if (!customer || customer.rowCount === 0) return res.sendStatus(404);
 
-    res.status(200).send(customers.rows);
+    res.status(200).send(customer.rows);
   } catch (error) {
     res.status(500).send(error.message);
   }
