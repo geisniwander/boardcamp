@@ -10,8 +10,21 @@ export async function getCustomers(req, res) {
 }
 
 export async function getCustomersById(req, res) {
+  const { id } = req.params;
+
+  if (!id || isNaN(id) || id <= 0) return res.send(400);
+
   try {
-  } catch {}
+    const customers = await db.query(`SELECT * FROM customers WHERE id = $1`, [
+      id,
+    ]);
+
+    if (!customers || customers.rowCount === 0) return res.sendStatus(404);
+
+    res.status(200).send(customers.rows);
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
 }
 
 export async function postCustomers(req, res) {
