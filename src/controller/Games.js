@@ -1,7 +1,7 @@
 import { db } from "../config/database.js";
 
 export async function getGames(req, res) {
-  const { name } = req.query;
+  const { name, offset, limit } = req.query;
 
   try {
     let games = undefined;
@@ -9,7 +9,11 @@ export async function getGames(req, res) {
       games = await db.query(`SELECT * FROM games WHERE upper(name) LIKE $1 `, [
         name.toUpperCase() + "%",
       ]);
-    else games = await db.query(`SELECT * FROM games`);
+    else
+      games = await db.query(`SELECT * FROM games OFFSET $1 LIMIT $2`, [
+        offset || 0,
+        limit,
+      ]);
 
     res.status(200).send(games.rows);
   } catch (error) {

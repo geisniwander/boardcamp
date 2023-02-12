@@ -2,7 +2,7 @@ import dayjs from "dayjs";
 import { db } from "../config/database.js";
 
 export async function getRentals(req, res) {
-  const { customerId, gameId, status, startDate } = req.query;
+  const { customerId, gameId, status, startDate, offset, limit } = req.query;
 
   try {
     const querySQL = `SELECT json_build_object(
@@ -49,7 +49,11 @@ export async function getRentals(req, res) {
         rentals = await db.query(`${querySQL} WHERE "rentDate" >= $1 `, [
           startDate,
         ]);
-      else rentals = await db.query(querySQL);
+      else
+        rentals = await db.query(`${querySQL} OFFSET $1 LIMIT $2`, [
+          offset || 0,
+          limit,
+        ]);
     }
 
     const arrayRentals = rentals.rows.map((row) => row.json_build_object);

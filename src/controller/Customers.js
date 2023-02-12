@@ -1,7 +1,7 @@
 import { db } from "../config/database.js";
 
 export async function getCustomers(req, res) {
-  const { cpf } = req.query;
+  const { cpf, offset, limit } = req.query;
 
   try {
     let customers = undefined;
@@ -9,7 +9,11 @@ export async function getCustomers(req, res) {
       customers = await db.query(`SELECT * FROM customers WHERE cpf LIKE $1 `, [
         cpf + "%",
       ]);
-    else customers = await db.query("SELECT * FROM customers");
+    else
+      customers = await db.query("SELECT * FROM customers OFFSET $1 LIMIT $2", [
+        offset || 0,
+        limit,
+      ]);
 
     res.status(200).send(customers.rows);
   } catch (error) {
