@@ -3,10 +3,10 @@ import {
   getCustomersById,
   postCustomers,
   putCustomers,
-} from "../controller/Customers";
+} from "../controller/Customers.js";
 import { Router } from "express";
 import { validateSchema } from "../middleware/ValidateSchema.js";
-import { customerSchema } from "../schema/CustomerSchema";
+import { customerSchema } from "../schema/CustomerSchema.js";
 
 const customersRouter = Router();
 
