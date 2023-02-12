@@ -97,7 +97,8 @@ export async function postEndRentals(req, res) {
 
     if (pastDays > rental.daysRented) {
       const days = pastDays - rental.daysRented;
-      delayFee = days * rental.originalPrice;
+      const pricePerDay = rental.originalPrice / rental.daysRented;
+      delayFee = days * pricePerDay;
     }
 
     const rentalEdited = await db.query(
