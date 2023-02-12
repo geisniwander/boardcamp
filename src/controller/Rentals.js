@@ -135,6 +135,23 @@ export async function postEndRentals(req, res) {
 }
 
 export async function deleteRentals(req, res) {
+  const { id } = req.params;
+
+  if (!id || isNaN(id) || id <= 0) return res.send(400);
+
   try {
-  } catch {}
+    const rental = await db.query("SELECT * FROM rentals WHERE id = $1", [id]);
+
+    if (!rental || rental.rowCount === 0) return res.sendStatus(404);
+
+    if (rental.rows[0].returnDate == null) return res.sendStatus(400);
+
+    const deletedRental = await db.query("DELETE FROM rentals WHERE id = $1", [
+      id,
+    ]);
+
+    res.sendStatus(200);
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
 }
