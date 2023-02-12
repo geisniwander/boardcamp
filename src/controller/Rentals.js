@@ -3,7 +3,37 @@ import { db } from "../config/database.js";
 
 export async function getRentals(req, res) {
   try {
-  } catch {}
+    const rentals = await db.query(`SELECT json_build_object(
+      'id', rentals.id,
+      'customerId', rentals."customerId",
+      'gameId', rentals."gameId",
+      'rentDate', rentals."rentDate",
+      'daysRented', rentals."daysRented",
+      'returnDate', rentals."returnDate",
+      'originalPrice', rentals."originalPrice",
+      'delayFee', rentals."delayFee",
+      'customer', json_build_object(
+        'id', customers.id,
+        'name', customers.name
+      ),
+      'game', json_build_object(
+        'id', games.id,
+        'name', games.name
+      )
+    )
+    FROM rentals
+    JOIN customers
+      ON rentals."customerId" = customers.id
+    JOIN games
+      ON rentals."gameId" = games.id
+    `);
+
+    const arrayRentals = rentals.rows.map((row) => row.json_build_object);
+
+    res.status(200).send(arrayRentals);
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
 }
 
 export async function postRentals(req, res) {
