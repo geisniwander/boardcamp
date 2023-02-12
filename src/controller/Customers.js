@@ -50,6 +50,38 @@ export async function postCustomers(req, res) {
 }
 
 export async function putCustomers(req, res) {
+  const { name, phone, cpf, birthday } = req.body;
+  const { id } = req.params;
+
+  if (!id || isNaN(id) || id <= 0) return res.send(400);
+
   try {
-  } catch {}
+    const customers = await db.query("SELECT cpf, id FROM customers");
+
+    if (
+      customers.rows.find(
+        (customer) => customer.cpf === cpf && customer.id != id
+      )
+    )
+      return res.send(409);
+
+    const customerEdited = await db.query(
+      `
+      UPDATE customers 
+      SET
+        name = $1,
+        phone = $2,
+        cpf = $3, 
+        birthday = $4
+      WHERE id = $5;`,
+      [name, phone, cpf, birthday, id]
+    );
+
+    if (!customerEdited || customerEdited.rowCount === 0)
+      return res.sendStatus(404);
+
+    res.sendStatus(201);
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
 }
