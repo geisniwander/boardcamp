@@ -78,8 +78,60 @@ export async function postRentals(req, res) {
 }
 
 export async function postEndRentals(req, res) {
+  const { id } = req.params;
+
+  if (!id || isNaN(id) || id <= 0) return res.send(400);
+
   try {
-  } catch {}
+    let rental = await db.query("SELECT * FROM rentals WHERE id = $1", [id]);
+    rental = rental.rows[0];
+
+    if (!rental || rental.rowCount === 0) return res.sendStatus(404);
+
+    if (rental.returnDate != null) return res.sendStatus(400);
+
+    const date = dayjs().format("YYYY/MM/DD");
+    const today = dayjs(dayjs().format("YYYY/MM/DD"));
+    const pastDays = today.diff(rental.rentDate, "day");
+    let delayFee = 0;
+
+    if (pastDays > rental.daysRented) {
+      const days = pastDays - rental.daysRented;
+      delayFee = days * rental.originalPrice;
+    }
+
+    const rentalEdited = await db.query(
+      `
+      UPDATE rentals 
+      SET 
+      "customerId" = $1,
+      "gameId" = $2,
+      "rentDate" = $3, 
+      "daysRented" = $4,
+      "returnDate" = $5, 
+      "originalPrice" = $6,
+      "delayFee" = $7
+      WHERE id = $8;
+      ;`,
+      [
+        rental.customerId,
+        rental.gameId,
+        rental.rentDate,
+        rental.daysRented,
+        date,
+        rental.originalPrice,
+        delayFee,
+        id,
+      ]
+    );
+
+    if (!rentalEdited || rentalEdited.rowCount === 0)
+      return res.sendStatus(404);
+
+    res.sendStatus(201);
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
 }
 
 export async function deleteRentals(req, res) {
