@@ -5,21 +5,20 @@ export async function getGames(req, res) {
   const { name, offset, limit, order, desc } = req.query;
 
   try {
-    let games = undefined;
+    let games = null;
     if (name)
       games = await db.query(`SELECT * FROM games WHERE upper(name) LIKE $1 `, [
         name.toUpperCase() + "%",
       ]);
     else {
       if (order) {
-        if (desc === "true")
-          games = await db.query(
-            format("SELECT * FROM games ORDER BY %I %s", order, "DESC")
-          );
-        else
-          games = await db.query(
-            format("SELECT * FROM games ORDER BY %I %s", order, "ASC")
-          );
+        games = await db.query(
+          format(
+            "SELECT * FROM games ORDER BY %I %s",
+            order,
+            desc === "true" ? "DESC" : "ASC"
+          )
+        );
       } else
         games = await db.query(`SELECT * FROM games OFFSET $1 LIMIT $2`, [
           offset || 0,
@@ -40,7 +39,7 @@ export async function postGames(req, res) {
 
     if (games.rows.find((game) => game.name === name)) return res.send(409);
 
-    const newGame = await db.query(
+    await db.query(
       `
       INSERT INTO games (name, image, "stockTotal", "pricePerDay")
       VALUES ($1, $2, $3, $4);`,

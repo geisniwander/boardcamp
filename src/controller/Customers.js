@@ -5,22 +5,21 @@ export async function getCustomers(req, res) {
   const { cpf, offset, limit, order, desc } = req.query;
 
   try {
-    let customers = undefined;
+    let customers = null;
     if (cpf)
       customers = await db.query(`SELECT * FROM customers WHERE cpf LIKE $1 `, [
         cpf + "%",
       ]);
     else {
-      if (order) {
-        if (desc === "true")
-          customers = await db.query(
-            format("SELECT * FROM customers ORDER BY %I %s", order, "DESC")
-          );
-        else
-          customers = await db.query(
-            format("SELECT * FROM customers ORDER BY %I %s", order, "ASC")
-          );
-      } else
+      if (order)
+        customers = await db.query(
+          format(
+            "SELECT * FROM customers ORDER BY %I %s",
+            order,
+            desc === "true" ? "DESC" : "ASC"
+          )
+        );
+      else
         customers = await db.query(
           "SELECT * FROM customers OFFSET $1 LIMIT $2",
           [offset || 0, limit]
@@ -59,7 +58,7 @@ export async function postCustomers(req, res) {
     if (customers.rows.find((customer) => customer.cpf === cpf))
       return res.send(409);
 
-    const newCustomer = await db.query(
+    await db.query(
       `
       INSERT INTO customers (name,  phone, cpf, birthday)
       VALUES ($1, $2, $3, $4);`,
@@ -83,7 +82,7 @@ export async function putCustomers(req, res) {
 
     if (
       customers.rows.find(
-        (customer) => customer.cpf === cpf && customer.id != id
+        (customer) => customer.cpf === cpf && customer.id !== id
       )
     )
       return res.send(409);
