@@ -29,26 +29,39 @@ export async function getRentals(req, res) {
     JOIN games
       ON rentals."gameId" = games.id
     `;
+    
     let rentals = [];
 
     if (customerId)
       rentals = await db.query(`${querySQL} WHERE "customerId" = $1 `, [
         customerId,
       ]);
+
     else if (gameId)
       rentals = await db.query(`${querySQL} WHERE "gameId" = $1 `, [gameId]);
+
     else {
+      
       if (status) {
+        
         if (status === "closed")
           rentals = await db.query(
-            `${querySQL} WHERE "returnDate" IS NOT NULL `
+            `${querySQL} WHERE "returnDate" IS NOT NULL AND "rentDate" >= $1`,
+            [startDate]
           );
-        else if (status === "open")
-          rentals = await db.query(`${querySQL} WHERE "returnDate" IS NULL `);
-      } else if (startDate)
+        
+          else if (status === "open")
+          rentals = await db.query(
+            `${querySQL} WHERE "returnDate" IS NULL AND "rentDate" >= $1`,
+            [startDate]
+          );
+      } 
+      
+      else if (startDate)
         rentals = await db.query(`${querySQL} WHERE "rentDate" >= $1 `, [
           startDate,
         ]);
+        
       else
         rentals = await db.query(`${querySQL} OFFSET $1 LIMIT $2`, [
           offset || 0,

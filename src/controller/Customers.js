@@ -14,7 +14,6 @@ export async function getCustomers(req, res) {
         offset || 0,
         limit,
       ]);
-
     res.status(200).send(customers.rows);
   } catch (error) {
     res.status(500).send(error.message);
