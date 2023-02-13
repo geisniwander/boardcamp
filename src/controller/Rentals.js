@@ -1,8 +1,10 @@
 import dayjs from "dayjs";
 import { db } from "../config/database.js";
+import format from "pg-format";
 
 export async function getRentals(req, res) {
-  const { customerId, gameId, status, startDate, offset, limit } = req.query;
+  const { customerId, gameId, status, startDate, offset, limit, order, desc } =
+    req.query;
 
   try {
     const querySQL = `SELECT json_build_object(
@@ -29,44 +31,47 @@ export async function getRentals(req, res) {
     JOIN games
       ON rentals."gameId" = games.id
     `;
-    
+
     let rentals = [];
 
     if (customerId)
       rentals = await db.query(`${querySQL} WHERE "customerId" = $1 `, [
         customerId,
       ]);
-
     else if (gameId)
       rentals = await db.query(`${querySQL} WHERE "gameId" = $1 `, [gameId]);
-
     else {
-      
       if (status) {
-        
         if (status === "closed")
           rentals = await db.query(
             `${querySQL} WHERE "returnDate" IS NOT NULL AND "rentDate" >= $1`,
             [startDate]
           );
-        
-          else if (status === "open")
+        else if (status === "open")
           rentals = await db.query(
             `${querySQL} WHERE "returnDate" IS NULL AND "rentDate" >= $1`,
             [startDate]
           );
-      } 
-      
-      else if (startDate)
+      } else if (startDate)
         rentals = await db.query(`${querySQL} WHERE "rentDate" >= $1 `, [
           startDate,
         ]);
-        
-      else
-        rentals = await db.query(`${querySQL} OFFSET $1 LIMIT $2`, [
-          offset || 0,
-          limit,
-        ]);
+      else {
+        if (order) {
+          if (desc === "true")
+            rentals = await db.query(
+              format(`${querySQL} ORDER BY rentals.%I %s`, order, "DESC")
+            );
+          else
+            rentals = await db.query(
+              format(`${querySQL} ORDER BY rentals.%I %s`, order, "ASC")
+            );
+        } else
+          rentals = await db.query(`${querySQL} OFFSET $1 LIMIT $2`, [
+            offset || 0,
+            limit,
+          ]);
+      }
     }
 
     const arrayRentals = rentals.rows.map((row) => row.json_build_object);

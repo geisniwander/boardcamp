@@ -1,7 +1,8 @@
+import format from "pg-format";
 import { db } from "../config/database.js";
 
 export async function getGames(req, res) {
-  const { name, offset, limit } = req.query;
+  const { name, offset, limit, order, desc } = req.query;
 
   try {
     let games = undefined;
@@ -9,12 +10,22 @@ export async function getGames(req, res) {
       games = await db.query(`SELECT * FROM games WHERE upper(name) LIKE $1 `, [
         name.toUpperCase() + "%",
       ]);
-    else
-      games = await db.query(`SELECT * FROM games OFFSET $1 LIMIT $2`, [
-        offset || 0,
-        limit,
-      ]);
-
+    else {
+      if (order) {
+        if (desc === "true")
+          games = await db.query(
+            format("SELECT * FROM games ORDER BY %I %s", order, "DESC")
+          );
+        else
+          games = await db.query(
+            format("SELECT * FROM games ORDER BY %I %s", order, "ASC")
+          );
+      } else
+        games = await db.query(`SELECT * FROM games OFFSET $1 LIMIT $2`, [
+          offset || 0,
+          limit,
+        ]);
+    }
     res.status(200).send(games.rows);
   } catch (error) {
     res.status(500).send(error.message);

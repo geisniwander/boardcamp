@@ -1,7 +1,8 @@
 import { db } from "../config/database.js";
+import format from "pg-format";
 
 export async function getCustomers(req, res) {
-  const { cpf, offset, limit } = req.query;
+  const { cpf, offset, limit, order, desc } = req.query;
 
   try {
     let customers = undefined;
@@ -9,11 +10,22 @@ export async function getCustomers(req, res) {
       customers = await db.query(`SELECT * FROM customers WHERE cpf LIKE $1 `, [
         cpf + "%",
       ]);
-    else
-      customers = await db.query("SELECT * FROM customers OFFSET $1 LIMIT $2", [
-        offset || 0,
-        limit,
-      ]);
+    else {
+      if (order) {
+        if (desc === "true")
+          customers = await db.query(
+            format("SELECT * FROM customers ORDER BY %I %s", order, "DESC")
+          );
+        else
+          customers = await db.query(
+            format("SELECT * FROM customers ORDER BY %I %s", order, "ASC")
+          );
+      } else
+        customers = await db.query(
+          "SELECT * FROM customers OFFSET $1 LIMIT $2",
+          [offset || 0, limit]
+        );
+    }
     res.status(200).send(customers.rows);
   } catch (error) {
     res.status(500).send(error.message);
