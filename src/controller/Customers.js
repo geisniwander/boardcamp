@@ -82,7 +82,7 @@ export async function putCustomers(req, res) {
 
     if (
       customers.rows.find(
-        (customer) => customer.cpf === cpf && customer.id !== id
+        (customer) => customer.cpf === cpf && customer.id != id
       )
     )
       return res.send(409);
